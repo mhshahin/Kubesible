@@ -1,0 +1,56 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_vars
+  tasks:
+  - name: Kubernetes Repository File
+    file:
+      path: /etc/yum.repos.d/kubernetes.repo
+      state: touch
+  
+  - name: Adding Kubernetes Repository Details to the Repository File
+    blockinfile:
+      path: /etc/yum.repos.d/kubernetes.repo
+      block: |
+        [kubernetes]
+        name=Kubernetes
+        baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        enabled=1
+        gpgcheck=1
+        repo_gpgcheck=1
+        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+  - name: Installing Docker and firewalld
+    shell: |
+      yum update -y
+      yum install firewalld -y
+      yum install -y yum-utils device-mapper-persistent-data lvm2
+      yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      yum install docker-ce -y --nobest
+      yum install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
+      yum update -y
+
+  - name: Installing Required Packages
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items: "{{ packages }}"
+  
+  - name: Starting and Enabling the Required Services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items: "{{ services }}"
+  
+  - name: Allow Network Ports in Firewalld
+    firewalld:
+      port: "{{ item }}"
+      state: enabled
+      permanent: yes
+      immediate: yes
+    with_items: "{{ ports }}"
+
+  - name: Enabling Bridge Firewall Rule
+    shell: "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"

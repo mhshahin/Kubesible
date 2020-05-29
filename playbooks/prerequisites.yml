@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_vars
+  tasks:
+  - name: Disabling Swap on All Nodes
+    shell: swapoff -a
+  
+  - name: Commenting Swap Entries in /etc/fstab
+    replace:
+      path: /etc/fstab
+      regexp: '(.*swap*)'
+      replace: '#\1'
