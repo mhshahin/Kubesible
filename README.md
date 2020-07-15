@@ -1,3 +1,3 @@
 # Kubersible
 
-## Caution: This Repository is a WIP. It has been made and tested on CentOS 7 VMs.
+## Caution: This is a WIP. So far, it has been tested on CentOS 7 VMs.
